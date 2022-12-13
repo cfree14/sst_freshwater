@@ -108,7 +108,7 @@ ggsave(g, filename=file.path(plotdir, "FigX_parameter_histograms.png"),
 # Parameter splines
 ################################################################################
 
-# Plot histograms
+# Plot splines
 g <- ggplot(data_ordered, aes(x=est, y=param_id)) +
   facet_wrap(~param_long, scales="free", ncol=4) +
   geom_linerange(mapping=aes(y=param_id, xmin=est_lo, xmax=est_hi), color="grey80") +

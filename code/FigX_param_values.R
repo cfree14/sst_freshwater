@@ -5,6 +5,7 @@
 
 # Clear workspace
 rm(list = ls())
+options(scipen=999)
 
 # Packages
 library(tidyverse)
@@ -25,6 +26,8 @@ freeR::complete(data_orig)
 
 # Format data
 data <- data_orig %>% 
+  # Build stock id
+  mutate(stock_id=paste(state, species, stock, sep="-")) %>% 
   # Add long parameter name
   mutate(param_long=recode_factor(param,
                                   "p_init"="Initial depletion (B/K)",
@@ -35,6 +38,12 @@ data <- data_orig %>%
                                   "q"="Catchability, q",
                                   "sigma"="CPUE observation error, σ",
                                   "tau"="Catch observation error, τ"))
+
+# Order data
+data_ordered <- data %>% 
+  arrange(param_long, desc(est)) %>% 
+  mutate(param_id=paste(param, stock_id),
+         param_id=factor(param_id, levels=param_id))
 
 # Format
 thetas <- data %>% 
@@ -56,6 +65,7 @@ theta_stats <- thetas %>%
 # Order thetas
 thetas_ordered <- thetas %>% 
   mutate(species=factor(species, levels=theta_stats$species))
+
 
 # Parameter histogram
 ################################################################################
@@ -93,6 +103,29 @@ g
 # Plot
 ggsave(g, filename=file.path(plotdir, "FigX_parameter_histograms.png"), 
        width=6.5, height=4, units="in", dpi=600)
+
+
+# Parameter splines
+################################################################################
+
+# Plot histograms
+g <- ggplot(data_ordered, aes(x=est, y=param_id)) +
+  facet_wrap(~param_long, scales="free", ncol=4) +
+  geom_linerange(mapping=aes(y=param_id, xmin=est_lo, xmax=est_hi), color="grey80") +
+  geom_point(alpha=0.5) +
+  # Labels
+  labs(x="Estimate", y="Stock") +
+  scale_fill_discrete(name="") +
+  # Theme
+  theme_bw() + base_theme +
+  theme(axis.text.y=element_blank(),
+        legend.position="top",
+        legend.margin = margin(rep(0,4)),
+        legend.key.size = unit(0.4, "cm"))
+g
+
+ggsave(g, filename=file.path(plotdir, "FigX_parameter_splines.png"), 
+       width=6.5, height=6.5, units="in", dpi=600)
 
 
 # Theta estimates
